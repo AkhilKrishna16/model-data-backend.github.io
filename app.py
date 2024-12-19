@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Body
+import requests
 from pydantic import BaseModel
 import redis
 from datetime import datetime
 import json
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 app = FastAPI()
 client = redis.Redis(host='localhost', port=6379, decode_responses=True)
@@ -15,7 +16,6 @@ class DataModel(BaseModel):
     timestamp: datetime
     score_id: UUID
 
-
 @app.get("/")
 def read_root():
     """
@@ -24,7 +24,7 @@ def read_root():
     Returns:
     dict: Initialization message.
     """
-    return {"message": "Initialize redis cache"}
+    return {"message": "Initialize redis cache."} 
 
 
 
@@ -63,11 +63,14 @@ def post_item(model_id: str = Body(default=None), scores: dict = Body(default=No
     
     Returns:
     bool: whether or not the data was successfully added
-    """
+    """ 
     try:
         timestamp = datetime.now()
-        response = client.set(score_id, DataModel(model_id=model_id, scores=scores, user_id=user_id, timestamp=timestamp, score_id=score_id).model_dump_json())
-        if response:
-            return {"message": "Data successfully added to Redis", "score_id": score_id}
+        check_exist = client.get(score_id) == None
+        if check_exist:
+            response = client.set(score_id, DataModel(model_id=model_id, scores=scores, user_id=user_id, timestamp=timestamp, score_id=score_id).model_dump_json())
+            if response:
+                return {"message": "Data successfully added to Redis", "score_id": score_id}
+        return {"message": f"Specific score_id {score_id} already exists."}
     except Exception as e:
         return {"message": str(e)}
