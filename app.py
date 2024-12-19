@@ -29,7 +29,7 @@ def read_root():
 
 
 @app.get("/model/{score_id}")
-def read_item(score_id: int):
+def read_item(score_id: str):
     """
     Get a Redis storage cache based on the specific score_id. 
     
@@ -50,7 +50,7 @@ def read_item(score_id: int):
 
 
 @app.post('/model')
-def post_item(model: DataModel, score_id: UUID):
+def post_item(model_id: str = Body(default=None), scores: dict = Body(default=None), user_id: str = Body(default=None), score_id: str = Body(default=None)):
     """
     Post data to Redis storage cache for the specific user_id. 
     
@@ -65,9 +65,9 @@ def post_item(model: DataModel, score_id: UUID):
     bool: whether or not the data was successfully added
     """
     try:
-        response = client.set(score_id, dict(model))
-        print(response)
+        timestamp = datetime.now()
+        response = client.set(score_id, DataModel(model_id=model_id, scores=scores, user_id=user_id, timestamp=timestamp, score_id=score_id).model_dump_json())
         if response:
-            return {"message": "Data successfully added to Redis", "score_id": str(score_id)}
+            return {"message": "Data successfully added to Redis", "score_id": score_id}
     except Exception as e:
         return {"message": str(e)}
