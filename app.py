@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import redis
 from datetime import datetime
 import json
-from uuid import UUID, uuid4
+from uuid import UUID
 
 app = FastAPI()
 client = redis.Redis(host='localhost', port=6379, decode_responses=True)
